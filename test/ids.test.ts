@@ -206,6 +206,22 @@ describe('heading definitions with a section number', () => {
 		);
 		expect(findCandidates(tree, 'heading', ids).map((c) => c.id)).toEqual(['CTR-X', 'REQ-9', 'REQ-8']);
 	});
+
+	it('accepts only section numbers, not all-caps words', async () => {
+		const tree = await md('## 12.3.4 `REQ-1`\n\n## A. `REQ-2`\n\n## NOTE `REQ-3`\n');
+		expect(findCandidates(tree, 'heading', ids).map((c) => c.id)).toEqual(['REQ-1', 'REQ-2']);
+	});
+
+	it('applies the same rule to split page titles', () => {
+		const spec = doc(
+			'SPEC.md',
+			'# Spec\n\n## 7.B `CTR-QRY` \u2014 title\n\nText.\n\n## \u00a73 `REQ-8` Tail\n\nText.\n\n## NOTE `REQ-3`\n\nText.\n',
+			{ split: 'h2' },
+		);
+		expect(spec.pages[1]!.titleIds).toEqual(['CTR-QRY']);
+		expect(spec.pages[2]!.titleIds).toEqual(['REQ-8']);
+		expect(spec.pages[3]!.titleIds).toEqual([]);
+	});
 });
 
 describe('broken anchors', () => {

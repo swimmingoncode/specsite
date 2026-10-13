@@ -46,8 +46,11 @@ export function firstMeaningful(el: Element | Root): ElementContent | undefined 
 	return (el.children as ElementContent[]).find((c) => !isWhitespace(c) && !isComment(c));
 }
 
-/** Text that is only a section number, such as `7.B `, `1.2 `, `A. ` or `§3 `. */
-const SECTION_NUMBER = /^\s*(§\s*)?[0-9A-Z]+(\.[0-9A-Z]+)*\.?\s*$/;
+/**
+ * Text that is only a section number, such as `7.B `, `12.3.4 `, `A. ` or `§3 `: a digits-led number,
+ * or a single capital letter, optionally after `§`. An all-caps word (`NOTE`) is not one.
+ */
+export const SECTION_NUMBER = /^\s*(§\s*)?([0-9]+(\.[0-9A-Z]+)*|[A-Z])\.?\s*$/;
 
 const isEl = (n: unknown, ...tags: string[]): n is Element =>
 	!!n && (n as Element).type === 'element' && (tags.length === 0 || tags.includes((n as Element).tagName));

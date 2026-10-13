@@ -11,7 +11,7 @@ import GithubSlugger from 'github-slugger';
 import { load as loadYaml } from 'js-yaml';
 import type { Root, Heading, Nodes, Code, Image, Definition } from 'mdast';
 import { posix } from 'node:path';
-import type { IdMatcher } from './ids.js';
+import { SECTION_NUMBER, type IdMatcher } from './ids.js';
 
 export interface DocInfo {
 	/** Path relative to `root`, posix separators. */
@@ -229,10 +229,11 @@ export function parseDocument(text: string, opts: ParseOptions): DocInfo {
 	return doc;
 }
 
-/** IDs in a heading: inline code that is exactly an ID, or an ID that opens the heading text. */
-/** The ID that opens a heading, if any: an ID anywhere else in it is a mention, not a definition. */
+/** The ID that opens a heading, if any (after an optional section number): an ID anywhere else in it is a mention, not a definition. */
 function idsInHeading(h: Heading, ids: IdMatcher): string[] {
-	let f: Nodes | undefined = h.children.find((c) => !(c.type === 'text' && !c.value.trim()));
+	const kids = h.children.filter((c) => !(c.type === 'text' && !c.value.trim()));
+	let f: Nodes | undefined = kids[0];
+	if (f?.type === 'text' && SECTION_NUMBER.test(f.value) && kids.length > 1) f = kids[1];
 	if (f && (f.type === 'strong' || f.type === 'emphasis')) f = f.children[0];
 	if (f?.type === 'inlineCode') return ids.exact(f.value) ? [f.value] : [];
 	if (f?.type === 'text') {
