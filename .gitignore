@@ -6,3 +6,6 @@ dist/
 coverage/
 example/site/dist/
 out/
+
+# Screenshots of private projects stay local
+docs/screenshots/private-*
