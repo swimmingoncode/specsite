@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { renderSnapshot } from './html/snapshot.js';
+import { HEX_COLOUR } from './html/template.js';
 import type { CheckMode } from './core/options.js';
 
 const USAGE = `Usage: specsite html <file.md> -o <out.html> [options]
@@ -76,7 +77,7 @@ export async function main(argv: string[]): Promise<number> {
 		process.stderr.write(USAGE);
 		return 1;
 	}
-	if (values.accent && !/^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/.test(values.accent)) {
+	if (values.accent && !HEX_COLOUR.test(values.accent)) {
 		process.stderr.write(`specsite: --accent must be a hex colour, got "${values.accent}"\n`);
 		return 1;
 	}

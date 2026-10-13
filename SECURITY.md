@@ -18,6 +18,9 @@ with `specsite html`. It applies rehype-sanitize with GitHub's allowlist, extend
 the classes Starlight puts on headings and asides). Scripts, event handlers, `style` attributes and
 `javascript:` URLs are dropped.
 
+The `brand` / `--brand` SVG of `specsite html` is configuration, not document content: it is inlined as
+given, never sanitised, and must be trusted. `accent` is checked to be a hex colour wherever it is passed.
+
 ## Reporting
 
 Report it privately through GitHub's

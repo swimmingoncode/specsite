@@ -13,11 +13,22 @@ export interface TemplateInput {
 	basis: string;
 	toc: string;
 	body: string;
+	/** SVG markup, inlined as given: trusted input (configuration, not document content). */
 	brand?: string;
 	brandDark?: string;
 	brandLabel?: string;
+	/** `#rgb` or `#rrggbb`; anything else throws, since it is written into the page's CSS. */
 	accent?: string;
 	googleFonts: boolean;
+}
+
+/** A hex colour, the only accepted `accent`. */
+export const HEX_COLOUR = /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/;
+
+/** Throw unless `accent` is undefined or a hex colour. */
+export function assertAccent(accent: string | undefined): void {
+	if (accent !== undefined && !HEX_COLOUR.test(accent))
+		throw new Error(`specsite: accent must be a hex colour (#rgb or #rrggbb), got "${accent}"`);
 }
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -44,6 +55,7 @@ function brandSvg(svg: string, cls: string, label: string): string {
 }
 
 export function pageTemplate(t: TemplateInput): string {
+	assertAccent(t.accent);
 	const accentLight = t.accent ?? SOC.deepViolet;
 	const accentDark = t.accent ? `color-mix(in srgb, ${t.accent} 55%, #ffffff)` : SOC.lime;
 	const ring = t.accent ?? SOC.violet;

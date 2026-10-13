@@ -24,7 +24,7 @@ import { processPages, report, type Problem, type RenderedPage } from '../core/e
 import { detectRepoUrl, repoPrefix, repoTop } from '../core/git.js';
 import { basisBlock, basisRows, buildInfo } from '../core/basis.js';
 import { snapshotSchema } from '../core/sanitize.js';
-import { pageTemplate } from './template.js';
+import { assertAccent, pageTemplate } from './template.js';
 
 export interface SnapshotOptions {
 	/** The Markdown file to render. */
@@ -33,12 +33,15 @@ export interface SnapshotOptions {
 	root?: string;
 	title?: string;
 	summary?: string;
-	/** SVG markup of a brand mark for the header (light theme), and optionally its dark-theme variant. */
+	/**
+	 * SVG markup of a brand mark for the header (light theme), and optionally its dark-theme variant. It is
+	 * inlined as given, never sanitised: trusted input, like the rest of the configuration.
+	 */
 	brand?: string;
 	brandDark?: string;
 	/** Accessible name of the brand mark. */
 	brandLabel?: string;
-	/** Accent colour (`#rrggbb`), replacing the default theme's. */
+	/** Accent colour (`#rgb` or `#rrggbb`), replacing the default theme's. Anything else throws. */
 	accent?: string;
 	/** Other documents whose IDs and anchors this one links to, at the URL where each is published. */
 	with?: { file: string; url: string }[];
@@ -127,6 +130,7 @@ function wrapTables(tree: Root): void {
 }
 
 export async function renderSnapshot(o: SnapshotOptions): Promise<SnapshotResult> {
+	assertAccent(o.accent);
 	const abs = resolve(o.file);
 	// Relative links resolve inside the repository that holds the file (or its directory, outside git).
 	const root = o.root ? resolve(o.root) : (repoTop(dirname(abs)) ?? dirname(abs));

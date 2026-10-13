@@ -177,8 +177,8 @@ shown as the render time).
 | --- | --- |
 | `-o, --out <file>` | Output file (required). |
 | `--title`, `--summary` | Override the front matter's `title` and `summary`. |
-| `--brand <svg>`, `--brand-dark <svg>`, `--brand-label <text>` | A mark for the header, inlined, with an optional dark-theme variant. |
-| `--accent <hex>` | Replace the default theme's accent. |
+| `--brand <svg>`, `--brand-dark <svg>`, `--brand-label <text>` | A mark for the header, inlined as given (trusted input, not sanitised), with an optional dark-theme variant. |
+| `--accent <hex>` | Replace the default theme's accent (`#rgb` or `#rrggbb`; `renderSnapshot` throws on anything else). |
 | `--with <file>=<url>` | Another document whose IDs this one links to (repeatable). |
 | `--root <dir>` | Directory relative links may reach (default: the file's git repository). |
 | `--repo-url <url>`, `--branch <name>` | For links to unpublished files. |
