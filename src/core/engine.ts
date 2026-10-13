@@ -33,7 +33,7 @@ export interface Definition {
 }
 
 export interface Problem {
-	kind: 'unknown-id' | 'duplicate-definition' | 'link-outside-root' | 'no-repo-url';
+	kind: 'unknown-id' | 'duplicate-definition' | 'broken-anchor' | 'link-outside-root' | 'no-repo-url';
 	message: string;
 	/** `file:line` locations. */
 	at: string[];
@@ -202,12 +202,30 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 		if (def.page === from || opts.pageUrl(def.page) === opts.pageUrl(from)) return '#' + def.anchor;
 		return opts.pageUrl(def.page) + (def.anchor ? '#' + def.anchor : '');
 	};
-	const anchorHref = (from: PageSpec, doc: DocInfo, fragment: string): string => {
-		const target = doc.anchors.get(fragment);
-		const byId = [...index.values()].find((d) => d.anchor === fragment.toLowerCase() && d.page.doc === doc);
+	const pagesOf = new Map<DocInfo, RenderedPage[]>();
+	for (const p of pages) pagesOf.set(p.spec.doc, [...(pagesOf.get(p.spec.doc) ?? []), p]);
+	/** The href of `doc#fragment` seen from `from`; a fragment with no anchor in `doc` is reported. */
+	const anchorHref = (from: PageSpec, doc: DocInfo, fragment: string, href: string): string => {
+		let key = fragment;
+		try {
+			key = decodeURIComponent(fragment);
+		} catch {
+			// a malformed escape: look it up as written
+		}
+		const target = doc.anchors.get(key) ?? doc.anchors.get(fragment);
+		const byId = [...index.values()].find((d) => d.anchor === key.toLowerCase() && d.page.doc === doc);
 		if (byId && !target) return hrefFor(from, byId);
-		const page = target ?? doc.pages[0]!;
-		const frag = target && page.titleSlug === fragment ? '' : fragment;
+		// Any other element id on one of the document's pages (raw HTML anchors, footnotes).
+		const holder = target ? undefined : (pagesOf.get(doc) ?? []).find((p) => taken.get(p)?.has(key) || taken.get(p)?.has(fragment));
+		if (!target && !holder) {
+			problems.push({
+				kind: 'broken-anchor',
+				message: `link "${href}" points to #${fragment}, which is not an anchor in ${doc.file}; it links to the document instead`,
+				at: locate(from, href, true),
+			});
+		}
+		const page = target ?? holder?.spec ?? doc.pages[0]!;
+		const frag = target && (page.titleSlug === key || page.titleSlug === fragment) ? '' : fragment;
 		if (page === from || opts.pageUrl(page) === opts.pageUrl(from)) return frag ? '#' + frag : '#';
 		return opts.pageUrl(page) + (frag ? '#' + frag : '');
 	};
@@ -243,7 +261,7 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 			if (n.properties?.dataSpecsiteRef) return;
 			const { path, query, fragment } = splitHref(href);
 			if (!path) {
-				if (attr === 'href' && fragment) n.properties.href = anchorHref(p.spec, p.spec.doc, fragment);
+				if (attr === 'href' && fragment) n.properties.href = anchorHref(p.spec, p.spec.doc, fragment, href);
 				return;
 			}
 			const rel = resolveRelative(p.spec.doc.file, path);
@@ -265,9 +283,10 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 			}
 			const doc = attr === 'href' ? docs.get(rel) : undefined;
 			if (doc) {
-				n.properties.href = fragment ? anchorHref(p.spec, doc, fragment) : opts.pageUrl(doc.pages[0]!) || '#';
+				n.properties.href = fragment ? anchorHref(p.spec, doc, fragment, href) : opts.pageUrl(doc.pages[0]!) || '#';
 				return;
 			}
+			// A file that is not published: a link to it on the repository host, fragment and all, unchecked.
 			const url = repoFileUrl(opts.repo, rel, attr === 'src' ? 'raw' : 'blob');
 			if (!url) {
 				if (!warnedNoRepo) {
@@ -295,7 +314,7 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 
 /** Problems that fail the build under `check: 'error'`. */
 export function isStrictProblem(p: Problem): boolean {
-	return p.kind === 'unknown-id' || p.kind === 'duplicate-definition';
+	return p.kind === 'unknown-id' || p.kind === 'duplicate-definition' || p.kind === 'broken-anchor';
 }
 
 export function formatProblems(problems: Problem[]): string {

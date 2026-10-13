@@ -26,7 +26,8 @@ Options:
       --repo-url <url>      Repository URL for links to unpublished files (default: origin, if GitHub)
       --branch <name>       Branch for those links (default: main)
       --prefixes <list>     Comma-separated ID prefixes (default: REQ,INV,NFR,OQ,DEF,DEC,ERR,US,AC,CTR,CND,T,F)
-      --check <warn|error>  Fail on unknown IDs or duplicate definitions with "error" (default: warn)
+      --check <warn|error>  Fail on unknown IDs, duplicate definitions or broken anchors with "error"
+                            (default: warn)
       --toc-depth <2|3>     Headings in the contents rail (default: 2)
       --no-google-fonts     Use system fonts; the page then makes no external request
   -h, --help                Show this help

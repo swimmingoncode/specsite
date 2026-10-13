@@ -106,7 +106,7 @@ unchanged, and nothing is written to disk.
 | `sidebar` | `{ label: 'Specification' }` | Group added to an explicit Starlight `sidebar` (`label`, `position: 'start' \| 'end'`, `collapsed`); `false` adds none. |
 | `mermaid` | `true` | Render ` ```mermaid ` fences in the browser, from the site's own bundle, only on pages that have one. |
 | `sourceLine` | `true` | Show the basis block at the top of each page: repository (`owner/name`), build commit (`HEAD`, linked), front-matter `spec_version`/`version` and `status`, ISO 8601 render time, and the commit that last changed the file. |
-| `check` | `'warn'` | `'error'` fails the build on a reference to an undefined ID or a duplicate definition. |
+| `check` | `'warn'` | `'error'` fails the build on a reference to an undefined ID, a duplicate definition, or a link to a missing anchor in a listed document. |
 
 A **file** document is `{ file, slug, title?, split?, defines? }`:
 
@@ -151,9 +151,12 @@ a traceability list, is a reference, not a duplicate (two list-item definitions 
 ## Links
 
 - A relative link to a listed document (`[plan](PLAN.md)`, `SPEC.md#4-errors`) becomes its site URL,
-  pointing into the right section page when the target is split.
+  pointing into the right section page when the target is split. Its fragment must be an anchor in that
+  document (a heading, an ID's definition, or any other element id); one that is not is reported as a
+  broken anchor, with file and line, and the link goes to the document instead.
 - A relative link to any other file in the repository (`../LICENSE`, `src/lib.rs#L4`) becomes a link to
-  that file on the repository host (`repoUrl`, `branch`); relative images become raw-file URLs.
+  that file on the repository host (`repoUrl`, `branch`); relative images become raw-file URLs. These
+  links are not checked: neither the file nor its fragment (`#L4`) is verified.
 - Absolute URLs and site-absolute paths are left as written.
 
 ## The HTML snapshot

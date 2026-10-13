@@ -87,7 +87,10 @@ export interface SpecsiteOptions {
 	 * Default `true`.
 	 */
 	sourceLine?: boolean;
-	/** `'error'` fails the build on a reference to an undefined ID or a duplicate definition. Default `'warn'`. */
+	/**
+	 * `'error'` fails the build on a reference to an undefined ID, a duplicate definition, or a link to a
+	 * fragment that is not an anchor in a listed document. Default `'warn'`.
+	 */
 	check?: CheckMode;
 }
 
