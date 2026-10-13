@@ -199,6 +199,15 @@ describe('heading definitions', () => {
 	});
 });
 
+describe('heading definitions with a section number', () => {
+	it('allows a section number before the ID, but not other words', async () => {
+		const tree = await md(
+			'### 7.B `CTR-X` \u2014 title\n\n## 3 `REQ-9`\n\n## \u00a73 `REQ-8`\n\n## Replaces `REQ-2`\n',
+		);
+		expect(findCandidates(tree, 'heading', ids).map((c) => c.id)).toEqual(['CTR-X', 'REQ-9', 'REQ-8']);
+	});
+});
+
 describe('broken anchors', () => {
 	it('reports a fragment with no anchor in a listed document, and fails under check: error', async () => {
 		const spec = doc(

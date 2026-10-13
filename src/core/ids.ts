@@ -46,6 +46,9 @@ export function firstMeaningful(el: Element | Root): ElementContent | undefined 
 	return (el.children as ElementContent[]).find((c) => !isWhitespace(c) && !isComment(c));
 }
 
+/** Text that is only a section number, such as `7.B `, `1.2 `, `A. ` or `§3 `. */
+const SECTION_NUMBER = /^\s*(§\s*)?[0-9A-Z]+(\.[0-9A-Z]+)*\.?\s*$/;
+
 const isEl = (n: unknown, ...tags: string[]): n is Element =>
 	!!n && (n as Element).type === 'element' && (tags.length === 0 || tags.includes((n as Element).tagName));
 
@@ -127,7 +130,10 @@ export function findCandidates(tree: Root, rule: DefinitionRule, ids: IdMatcher)
 			case 'heading': {
 				if (!/^h[1-6]$/.test(node.tagName)) return;
 				// Only an ID that opens the heading defines it (`## Replaces \`REQ-2\`` mentions REQ-2).
-				let f = firstMeaningful(node);
+				// A section number may precede it (`### 7.B \`CTR-QRY\``, `## §3 \`REQ-9\``).
+				const kids = (node.children as ElementContent[]).filter((c) => !isWhitespace(c) && !isComment(c));
+				let f: ElementContent | undefined = kids[0];
+				if (f?.type === 'text' && SECTION_NUMBER.test(f.value) && kids.length > 1) f = kids[1];
 				if (isEl(f, 'strong', 'em')) f = firstMeaningful(f);
 				const id = idCode(f, ids);
 				if (id) out.push({ id, rule, code: f as Element });
