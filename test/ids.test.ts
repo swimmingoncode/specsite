@@ -147,3 +147,76 @@ describe('duplicates', () => {
 		expect(res.problems.map((p) => p.at)).toEqual([['SPEC.md:3', 'SPEC.md:7']]);
 	});
 });
+
+describe('duplicates across strict kinds', () => {
+	it('reports a table row defined twice', async () => {
+		const a = doc('SPEC.md', '# Spec\n\n| ID | x |\n| --- | --- |\n| `INV-7` | one |\n');
+		const b = doc('PLAN.md', '# Plan\n\n| ID | x |\n| --- | --- |\n| `INV-7` | two |\n');
+		const res = processPages(await render(a, b), { ids, repo, pageUrl });
+		expect(res.problems.map((p) => [p.kind, p.at])).toEqual([['duplicate-definition', ['SPEC.md:5', 'PLAN.md:5']]]);
+	});
+	it('reports a heading defined twice', async () => {
+		const d = doc('SPEC.md', '# Spec\n\n### `CTR-ALPHA` First\n\nx\n\n### `CTR-ALPHA` Second\n');
+		const res = processPages(await render(d), { ids, repo, pageUrl });
+		expect(res.problems.map((p) => [p.kind, p.at])).toEqual([['duplicate-definition', ['SPEC.md:3', 'SPEC.md:7']]]);
+	});
+	it('reports a heading that repeats a split section title', async () => {
+		const spec = doc('SPEC.md', '# Spec\n\n## `CTR-BETA` Beta\n\nText.\n', { split: 'h2' });
+		const plan = doc('PLAN.md', '# Plan\n\n### `CTR-BETA` Again\n');
+		const res = processPages(await render(spec, plan), { ids, repo, pageUrl });
+		expect(res.index.get('CTR-BETA')?.rule).toBe('title');
+		expect(res.problems.map((p) => [p.kind, p.at])).toEqual([['duplicate-definition', ['SPEC.md:3', 'PLAN.md:3']]]);
+	});
+	it('keeps list items lenient against a strict definition', async () => {
+		const d = doc('SPEC.md', '# Spec\n\n- `REQ-5` traced\n\n| ID | x |\n| --- | --- |\n| `REQ-5` | defined |\n\n### `REQ-6` Heading\n\n- `REQ-6` traced\n');
+		const pages = await render(d);
+		const res = processPages(pages, { ids, repo, pageUrl });
+		expect(res.problems).toEqual([]);
+		expect(res.index.get('REQ-5')?.rule).toBe('table');
+		expect(res.index.get('REQ-6')?.rule).toBe('heading');
+	});
+	it('gives bold priority over a table row in an earlier document', async () => {
+		const spec = doc('SPEC.md', '# Spec\n\n| ID | x |\n| --- | --- |\n| `REQ-30` | summary |\n');
+		const plan = doc('PLAN.md', '# Plan\n\n**`REQ-30`** The definition.\n');
+		const pages = await render(spec, plan);
+		const res = processPages(pages, { ids, repo, pageUrl });
+		const def = res.index.get('REQ-30');
+		expect([def?.rule, def?.page.doc.file]).toEqual(['bold', 'PLAN.md']);
+		expect(toHtml(pages[0]!.tree)).toContain('href="/docs/plan/#req-30"');
+		// Bold and table are one strict kind, so the table row is still reported, after the winner.
+		expect(res.problems.map((p) => [p.kind, p.at])).toEqual([['duplicate-definition', ['PLAN.md:3', 'SPEC.md:5']]]);
+	});
+});
+
+describe('heading definitions', () => {
+	it('does not define an ID that only appears later in a heading', async () => {
+		const tree = await md('## Replaces `REQ-2`\n\n### Also REQ-3 here\n\n## **`REQ-4`** Bold lead\n');
+		expect(findCandidates(tree, 'heading', ids).map((c) => c.id)).toEqual(['REQ-4']);
+		const spec = doc('SPEC.md', '# Spec\n\n## Replaces `REQ-2`\n\nText.\n', { split: 'h2' });
+		expect(spec.pages[1]!.titleIds).toEqual([]);
+		const res = processPages(await render(spec), { ids, repo, pageUrl });
+		expect(res.index.has('REQ-2')).toBe(false);
+	});
+});
+
+describe('broken anchors', () => {
+	it('reports a fragment with no anchor in a listed document, and fails under check: error', async () => {
+		const spec = doc(
+			'SPEC.md',
+			'# Spec\n\n## Keys\n\n[ok](PLAN.md#steps) [bad](PLAN.md#nope)\n\n[here](#keys) [gone](#missing)\n\n[notes](NOTES.md#anything)\n',
+		);
+		const plan = doc('PLAN.md', '# Plan\n\n## Steps\n\nx\n');
+		const pages = await render(spec, plan);
+		const res = processPages(pages, { ids, repo, pageUrl });
+		expect(res.problems.map((p) => [p.kind, p.at])).toEqual([
+			['broken-anchor', ['SPEC.md:5']],
+			['broken-anchor', ['SPEC.md:7']],
+		]);
+		const html = toHtml(pages[0]!.tree);
+		expect(html).toContain('href="/docs/plan/#steps"');
+		expect(html).toContain('href="/docs/plan/#nope"');
+		// Unlisted files become repository URLs, fragment and all, without a check.
+		expect(html).toContain('href="https://github.com/acme/widget/blob/main/NOTES.md#anything"');
+		expect(() => report(res.problems, 'error', () => {})).toThrow(/2 identifier problem/);
+	});
+});
