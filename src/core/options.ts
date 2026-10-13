@@ -7,7 +7,7 @@ export type DefinitionRule =
 	| 'bold'
 	/** `| \`INV-3\` | ... |`: the first cell of a table body row. */
 	| 'table'
-	/** `### \`CTR-LEDGER\` ...` or `### CTR-LEDGER ...`: an ID in a heading. */
+	/** `### \`CTR-LEDGER\` ...` or `### CTR-LEDGER ...`: an ID that opens a heading. */
 	| 'heading'
 	/** `- \`AC-A1.2\` ...`: a list item that opens with an ID. */
 	| 'list';

@@ -230,14 +230,16 @@ export function parseDocument(text: string, opts: ParseOptions): DocInfo {
 }
 
 /** IDs in a heading: inline code that is exactly an ID, or an ID that opens the heading text. */
+/** The ID that opens a heading, if any: an ID anywhere else in it is a mention, not a definition. */
 function idsInHeading(h: Heading, ids: IdMatcher): string[] {
-	const out: string[] = [];
-	for (const c of h.children) if (c.type === 'inlineCode' && ids.exact(c.value)) out.push(c.value);
-	if (!out.length) {
-		const lead = ids.leading(toString(h));
-		if (lead) out.push(lead);
+	let f: Nodes | undefined = h.children.find((c) => !(c.type === 'text' && !c.value.trim()));
+	if (f && (f.type === 'strong' || f.type === 'emphasis')) f = f.children[0];
+	if (f?.type === 'inlineCode') return ids.exact(f.value) ? [f.value] : [];
+	if (f?.type === 'text') {
+		const lead = ids.leading(f.value);
+		return lead ? [lead] : [];
 	}
-	return out;
+	return [];
 }
 
 /** 1-based line of a character offset. */

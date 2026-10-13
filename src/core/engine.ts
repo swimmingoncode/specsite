@@ -90,8 +90,8 @@ function locateDefinition(def: Definition, nth = 0): string {
 	const shape: Record<string, RegExp> = {
 		bold: new RegExp(`\\*\\*${code}\\*\\*`),
 		table: new RegExp(`^\\s*\\|\\s*(?:\\*\\*)?${code}`),
-		heading: new RegExp(`^\\s{0,3}#{1,6}\\s.*${escapeRe(id)}`),
-		title: new RegExp(`^\\s{0,3}#{1,6}\\s.*${escapeRe(id)}`),
+		heading: new RegExp(`^\\s{0,3}#{1,6}\\s+[*_\`]*${escapeRe(id)}`),
+		title: new RegExp(`^\\s{0,3}#{1,6}\\s+[*_\`]*${escapeRe(id)}`),
 		list: new RegExp(`^\\s*(?:[-*+]|\\d+[.)])\\s+(?:\\[.\\]\\s+)?${code}`),
 	};
 	for (let i = from; i < to && i < lines.length; i++) {

@@ -130,7 +130,8 @@ they are listed):
 
 1. `bold`: `` **`REQ-KV-1`** `` at the start of a paragraph, list item or table cell;
 2. `table`: `` `INV-1` `` (optionally bold) as the first cell of a table body row;
-3. `heading`: `` `CTR-STORE` `` anywhere in a heading, or an ID that opens the heading text;
+3. `heading`: an ID that opens a heading, in code (`` ### `CTR-STORE` Store ``) or as text
+   (`### CTR-STORE Store`); an ID later in a heading (`` ## Replaces `REQ-2` ``) is a mention;
 4. `list`: a list item that opens with `` `AC-A1.1` ``.
 
 When a document is split at H2s, an ID in an H2 is defined by that section's page.

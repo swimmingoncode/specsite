@@ -126,18 +126,15 @@ export function findCandidates(tree: Root, rule: DefinitionRule, ids: IdMatcher)
 			}
 			case 'heading': {
 				if (!/^h[1-6]$/.test(node.tagName)) return;
-				let found: Candidate | undefined;
-				walk({ type: 'root', children: node.children }, (n) => {
-					if (found) return 'skip';
-					if (n.type === 'element' && isOpaque(n)) return 'skip';
-					const id = idCode(n, ids);
-					if (id) found = { id, rule, code: n as Element };
-				});
-				if (!found) {
-					const lead = ids.leading(textOf(node));
-					if (lead) found = { id: lead, rule, heading: node };
+				// Only an ID that opens the heading defines it (`## Replaces \`REQ-2\`` mentions REQ-2).
+				let f = firstMeaningful(node);
+				if (isEl(f, 'strong', 'em')) f = firstMeaningful(f);
+				const id = idCode(f, ids);
+				if (id) out.push({ id, rule, code: f as Element });
+				else if (f?.type === 'text') {
+					const lead = ids.leading(f.value);
+					if (lead) out.push({ id: lead, rule, heading: node });
 				}
-				if (found) out.push(found);
 				return 'skip';
 			}
 			case 'list': {
