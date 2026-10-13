@@ -1,0 +1,15 @@
+---
+// Starlight's footer, followed by the Swimming on Code endorsement.
+import Default from '@astrojs/starlight/components/Footer.astro';
+import charcoal from '../assets/swimming-on-code-wordmark-charcoal.svg?url';
+import white from '../assets/swimming-on-code-wordmark-white.svg?url';
+---
+
+<Default><slot /></Default>
+<p class="soc-endorsement">
+	<span>specsite is a Swimming on Code project</span>
+	<a href="https://swimmingoncode.com" aria-label="Swimming on Code">
+		<img class="soc-light" src={charcoal} alt="Swimming on Code" width="160" height="55" />
+		<img class="soc-dark" src={white} alt="Swimming on Code" width="160" height="55" />
+	</a>
+</p>

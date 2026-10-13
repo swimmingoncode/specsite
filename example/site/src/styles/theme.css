@@ -1,0 +1,115 @@
+/*
+ * Swimming on Code, mapped onto Starlight's custom properties (Brand Application Guidelines: Color,
+ * Typography, Graphic language). Palette: violet #865CEC, charcoal #333333, white, lime #B8FFA2,
+ * light greys #F2F2F2 / #E5E5E5, deep violet #6A3FD9 (text and links on white only).
+ *
+ * Contrast (WCAG AA): text is charcoal on white (12.6:1) or white on charcoal (12.6:1); links are deep violet
+ * on white (6.3:1) or lime on charcoal (10.8:1). Violet is never a text colour here, and no text sits on it.
+ * Starlight's grey scale runs from --sl-color-white (strongest text) to --sl-color-black (page ground).
+ */
+
+:root {
+	--soc-violet: #865cec;
+	--soc-deep-violet: #6a3fd9;
+	--soc-charcoal: #333333;
+	--soc-white: #ffffff;
+	--soc-lime: #b8ffa2;
+	--soc-grey-1: #f2f2f2;
+	--soc-grey-2: #e5e5e5;
+
+	/* Dark theme (Starlight's :root is its dark theme): white on charcoal, lime for accents. */
+	--sl-color-white: var(--soc-white);
+	--sl-color-gray-1: color-mix(in srgb, var(--soc-white) 92%, var(--soc-charcoal));
+	--sl-color-gray-2: color-mix(in srgb, var(--soc-white) 86%, var(--soc-charcoal));
+	--sl-color-gray-3: color-mix(in srgb, var(--soc-white) 70%, var(--soc-charcoal)); /* secondary text, ~6.4:1 */
+	--sl-color-gray-4: color-mix(in srgb, var(--soc-white) 40%, var(--soc-charcoal));
+	--sl-color-gray-5: color-mix(in srgb, var(--soc-white) 20%, var(--soc-charcoal));
+	--sl-color-gray-6: color-mix(in srgb, var(--soc-white) 8%, var(--soc-charcoal));
+	--sl-color-black: var(--soc-charcoal);
+	--sl-color-accent-low: color-mix(in srgb, var(--soc-violet) 35%, var(--soc-charcoal));
+	--sl-color-accent: var(--soc-lime); /* fills (current page): charcoal text on lime, 10.8:1 */
+	--sl-color-accent-high: var(--soc-lime);
+	--sl-color-text-accent: var(--soc-lime);
+	--sl-color-text-invert: var(--soc-charcoal);
+	--sl-color-bg: var(--soc-charcoal);
+	--sl-color-bg-nav: var(--soc-charcoal);
+	--sl-color-bg-sidebar: var(--soc-charcoal);
+
+	/* Typography: pairing A of the guidelines (a proposal there): Barlow Condensed, Barlow, JetBrains Mono. */
+	--sl-font: 'Barlow', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--sl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+	--soc-font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+	--sl-text-body: 1.0625rem; /* 17 px; the guidelines ask for 16 to 18 */
+	--sl-line-height: 1.55;
+	--sl-content-width: 46rem; /* about 70 characters */
+}
+
+:root[data-theme='light'] {
+	/* Light theme: charcoal on white, deep violet for links and fills. */
+	--sl-color-white: var(--soc-charcoal);
+	--sl-color-gray-1: color-mix(in srgb, var(--soc-charcoal) 92%, var(--soc-white));
+	--sl-color-gray-2: color-mix(in srgb, var(--soc-charcoal) 86%, var(--soc-white));
+	--sl-color-gray-3: color-mix(in srgb, var(--soc-charcoal) 78%, var(--soc-white)); /* secondary text, ~7:1 */
+	--sl-color-gray-4: color-mix(in srgb, var(--soc-charcoal) 45%, var(--soc-white));
+	--sl-color-gray-5: var(--soc-grey-2);
+	--sl-color-gray-6: var(--soc-grey-1);
+	--sl-color-gray-7: var(--soc-grey-1);
+	--sl-color-black: var(--soc-white);
+	--sl-color-accent-low: color-mix(in srgb, var(--soc-violet) 14%, var(--soc-white));
+	--sl-color-accent: var(--soc-deep-violet); /* fills: white on deep violet, 6.3:1 */
+	--sl-color-accent-high: var(--soc-deep-violet);
+	--sl-color-text-accent: var(--soc-deep-violet);
+	--sl-color-text-invert: var(--soc-white);
+	--sl-color-bg: var(--soc-white);
+	--sl-color-bg-nav: var(--soc-white);
+	--sl-color-bg-sidebar: var(--soc-white);
+	--sl-color-hairline-light: var(--soc-grey-2);
+	--sl-color-hairline: var(--soc-grey-2);
+}
+
+/* Display face for titles and headings, in sentence case. */
+h1,
+.sl-markdown-content :is(h2, h3, h4),
+.site-title {
+	font-family: var(--soc-font-display);
+	font-weight: 600;
+	letter-spacing: 0.005em;
+}
+
+/* Interface style: 2 px charcoal borders and a hard offset shadow, no blur. */
+:root[data-theme='light'] .sl-markdown-content blockquote {
+	border: 2px solid var(--soc-charcoal);
+	border-radius: 0.75rem;
+	padding: 0.75rem 1rem;
+	box-shadow: 4px 4px 0 var(--soc-charcoal);
+}
+
+/* The endorsement under the footer. Clear space of 1 X (about a quarter of the lockup's height) all round. */
+.soc-endorsement {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem 1rem;
+	margin-top: 2rem;
+	font-size: var(--sl-text-sm);
+	color: var(--sl-color-gray-3);
+}
+.soc-endorsement a {
+	display: inline-block;
+	padding: 14px;
+	margin: -14px;
+}
+.soc-endorsement img {
+	display: block;
+	width: 160px; /* the horizontal wordmark's minimum width */
+	height: auto;
+}
+.soc-dark {
+	display: none !important;
+}
+:root:not([data-theme='light']) .soc-light {
+	display: none !important;
+}
+:root:not([data-theme='light']) .soc-dark {
+	display: block !important;
+}
