@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The pages show the last commit that touched each document.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build the fixture site
+        run: npm run build --workspace example/site
+      - name: Render a snapshot with the CLI
+        run: node bin/specsite.js html example/SPEC.md -o out/spec.html --with example/PLAN.md=plan.html --no-google-fonts
