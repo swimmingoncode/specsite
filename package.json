@@ -1,0 +1,103 @@
+{
+  "name": "specsite",
+  "version": "0.1.0",
+  "description": "Publish a repository's Markdown specs as living Starlight pages and single-file HTML snapshots, with cross-document requirement-ID links.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swimmingoncode/specsite.git"
+  },
+  "homepage": "https://github.com/swimmingoncode/specsite#readme",
+  "bugs": "https://github.com/swimmingoncode/specsite/issues",
+  "keywords": [
+    "starlight",
+    "astro",
+    "starlight-plugin",
+    "specification",
+    "markdown",
+    "requirements",
+    "traceability"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "bin": {
+    "specsite": "./bin/specsite.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./loader": {
+      "types": "./dist/loader.d.ts",
+      "import": "./dist/loader.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./styles.css": "./styles/specsite.css",
+    "./client/mermaid": "./client/mermaid.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "client",
+    "styles",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+    "README.md"
+  ],
+  "workspaces": [
+    "example/site"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "example:build": "npm run build && npm run build --workspace example/site"
+  },
+  "devDependencies": {
+    "@astrojs/starlight": "0.42.4",
+    "@types/hast": "3.0.5",
+    "@types/js-yaml": "4.0.9",
+    "@types/mdast": "4.0.4",
+    "@types/node": "22.20.4",
+    "astro": "7.3.5",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  },
+  "dependencies": {
+    "github-slugger": "2.0.0",
+    "hast-util-from-html": "2.0.3",
+    "hast-util-to-html": "9.0.5",
+    "hast-util-to-string": "3.0.1",
+    "js-yaml": "4.3.2",
+    "mdast-util-from-markdown": "2.0.3",
+    "mdast-util-to-string": "4.0.0",
+    "mermaid": "11.17.2",
+    "rehype-raw": "7.0.0",
+    "rehype-stringify": "10.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "remark-rehype": "11.1.2",
+    "tinyglobby": "0.2.17",
+    "unified": "11.0.5",
+    "unist-util-visit": "5.1.0"
+  },
+  "peerDependencies": {
+    "@astrojs/starlight": ">=0.42.0",
+    "astro": ">=7.2.10"
+  },
+  "peerDependenciesMeta": {
+    "@astrojs/starlight": {
+      "optional": true
+    },
+    "astro": {
+      "optional": true
+    }
+  }
+}
