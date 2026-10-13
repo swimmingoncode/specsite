@@ -142,10 +142,11 @@ page, another page, or another document. With `linkText`, IDs in running text ar
 existing links and diagrams are left alone. A definition page ranks first in search for its ID.
 
 **Problems.** An ID in inline code that nothing defines stays plain text and is reported, with each file and
-line; so is an ID defined twice by the same rule, such as two bold definitions or two table rows (the
-first wins, later ones become links). An ID that opens a list item or table row after a stronger definition
-elsewhere, as in a traceability list, is a reference, not a duplicate. With `check: 'error'` either fails
-the build.
+line; so is an ID defined twice. Bold, table-row, heading and section-title definitions are one kind: a
+second definition by any of them, in any document, is a duplicate (the first in priority order wins, later
+ones become links). Only list items are lenient: a list item that opens with an ID defined elsewhere, as in
+a traceability list, is a reference, not a duplicate (two list-item definitions still are). With
+`check: 'error'` either fails the build.
 
 ## Links
 

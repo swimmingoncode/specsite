@@ -56,6 +56,12 @@ export interface EngineResult {
 	linked: number;
 }
 
+/** Definition rules that conflict with each other (all but `list`). */
+const isStrictRule = (r: Definition['rule']) => r !== 'list';
+
+/** Rules that share a source shape, for counting the n-th match on a page. */
+const shapeOf = (r: Definition['rule']) => (r === 'title' ? 'heading' : r);
+
 /** Lines in a page's source range where `id` appears. */
 function linesOf(page: PageSpec, id: string): number[] {
 	const { text } = page.doc;
@@ -145,10 +151,11 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 			index.set(def.id, def);
 			return true;
 		}
-		// Only the same kind of definition twice is a conflict: a list item or table row that opens with an ID
-		// defined more strongly elsewhere (a traceability list, a summary table) is a reference.
-		const sameKind = prev.rule === def.rule || (prev.rule === 'title' && def.rule === 'heading');
-		if (sameKind && (prev.page !== def.page || prev.el !== def.el)) {
+		// Bold, table, heading and title definitions are one strict kind: a second one, by any of them, is a
+		// duplicate. Only a list item is lenient: one that opens with an ID defined elsewhere (a traceability
+		// list) is a reference. Two list items are still a duplicate.
+		const conflict = prev.rule === def.rule || (isStrictRule(prev.rule) && isStrictRule(def.rule));
+		if (conflict && (prev.page !== def.page || prev.el !== def.el)) {
 			const list = duplicates.get(def.id) ?? [prev];
 			list.push(def);
 			duplicates.set(def.id, list);
@@ -187,7 +194,7 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 		problems.push({
 			kind: 'duplicate-definition',
 			message: `${id} is defined ${defs.length} times; the first wins`,
-			at: defs.map((d, i) => locateDefinition(d, defs.slice(0, i).filter((e) => e.page === d.page && e.rule === d.rule).length)),
+			at: defs.map((d, i) => locateDefinition(d, defs.slice(0, i).filter((e) => e.page === d.page && shapeOf(e.rule) === shapeOf(d.rule)).length)),
 		});
 	}
 
