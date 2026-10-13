@@ -2,9 +2,30 @@
  * specsite: styles for published documents. Neutral by design: everything is expressed in Starlight's
  * own custom properties, so a site's theme carries through. */
 
+/* The basis block: repository, build commit, version, status, render time; then the file's own last commit. */
 .specsite-source {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.125rem 1.25rem;
+	margin: 0 0 1.5rem;
 	font-size: var(--sl-text-sm);
 	color: var(--sl-color-gray-3);
+}
+.specsite-source > div {
+	display: flex;
+	gap: 0.375rem;
+	margin: 0;
+	min-width: 0;
+}
+.specsite-source dt {
+	font-weight: normal;
+}
+.specsite-source dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+.specsite-source [data-specsite-basis='source'] {
+	flex-basis: 100%;
 }
 .specsite-source code {
 	font-size: inherit;

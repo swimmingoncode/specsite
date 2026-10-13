@@ -9,5 +9,6 @@ export * from './links.js';
 export * from './source.js';
 export * from './engine.js';
 export * from './git.js';
+export * from './basis.js';
 export * from './project.js';
 export { renderSnapshot, type SnapshotOptions } from '../html/snapshot.js';

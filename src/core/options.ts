@@ -81,7 +81,11 @@ export interface SpecsiteOptions {
 	sidebar?: SidebarOptions | false;
 	/** Render ```mermaid fences in the browser (bundled, loaded only on pages that have a diagram). Default `true`. */
 	mermaid?: boolean;
-	/** Show "Source: FILE @ commit" on each page. Default `true`. */
+	/**
+	 * Show the basis block at the top of each page: repository, the commit the site was built from, the
+	 * document's version and status (front matter), the render time, and the commit that last changed the file.
+	 * Default `true`.
+	 */
 	sourceLine?: boolean;
 	/** `'error'` fails the build on a reference to an undefined ID or a duplicate definition. Default `'warn'`. */
 	check?: CheckMode;

@@ -14,12 +14,12 @@ function git(cwd: string, args: string[]): string {
 }
 
 export interface CommitInfo {
-	/** Abbreviated hash of the last commit that touched the file. */
+	/** Abbreviated hash (`git rev-parse --short`). */
 	short: string;
 	/** Full hash, for permalinks. */
 	hash: string;
 	date?: Date;
-	/** The working tree differs from that commit. */
+	/** The working tree (the file, for `lastCommit`) differs from that commit. */
 	dirty: boolean;
 }
 
@@ -29,6 +29,15 @@ export function lastCommit(absPath: string): CommitInfo | undefined {
 	if (!out) return undefined;
 	const [hash, short, iso] = out.split('\t');
 	const dirty = !!git(dirname(absPath), ['status', '--porcelain', '--', absPath]);
+	return { hash: hash!, short: short!, date: iso ? new Date(iso) : undefined, dirty };
+}
+
+/** The commit checked out in the repository holding `dir` (`HEAD`), or undefined outside a repository. */
+export function headCommit(dir: string): CommitInfo | undefined {
+	const out = git(dir, ['log', '-1', '--format=%H%x09%h%x09%cI', 'HEAD']);
+	if (!out) return undefined;
+	const [hash, short, iso] = out.split('\t');
+	const dirty = !!git(dir, ['status', '--porcelain', '--untracked-files=no']);
 	return { hash: hash!, short: short!, date: iso ? new Date(iso) : undefined, dirty };
 }
 

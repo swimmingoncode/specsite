@@ -19,7 +19,9 @@ pipeline writes a self-contained HTML page per document, for sharing while a rep
 - Pages are generated from the listed files at build time. Nothing is copied into `src/content/docs`,
   and nothing generated is committed.
 - Only the files you list are read and published: the configuration is an allowlist.
-- Each page says which file and commit it came from, and its edit link opens that file, not a copy.
+- Each page opens with its basis: the repository, the commit the site was built from, the document's
+  version and status, when it was rendered, and the commit that last changed the file. Its edit link opens
+  that file, not a copy.
 - Fix a page by editing the Markdown; the next build carries it everywhere it appears.
 
 ## Install
@@ -99,11 +101,11 @@ unchanged, and nothing is written to disk.
 | `ids.pattern` | from `prefixes` | A regular expression (source, no anchors) that replaces the built-in one. |
 | `ids.definitions` | `'auto'` | `'auto'`, or the definition rules to use, in priority order: `'bold'`, `'table'`, `'heading'`, `'list'`. |
 | `ids.linkText` | `true` | Also link IDs written as plain text, not only in `code`. |
-| `repoUrl` | the `origin` remote, if on github.com | Base URL for edit links, the source line and links to unpublished files; `false` turns them off. |
+| `repoUrl` | the `origin` remote, if on github.com | Base URL for edit links, the basis block and links to unpublished files; `false` turns them off. |
 | `branch` | `'main'` | Branch for edit links and links to unpublished files. |
 | `sidebar` | `{ label: 'Specification' }` | Group added to an explicit Starlight `sidebar` (`label`, `position: 'start' \| 'end'`, `collapsed`); `false` adds none. |
 | `mermaid` | `true` | Render ` ```mermaid ` fences in the browser, from the site's own bundle, only on pages that have one. |
-| `sourceLine` | `true` | Show "Source: FILE @ commit" at the top of each page. |
+| `sourceLine` | `true` | Show the basis block at the top of each page: repository (`owner/name`), build commit (`HEAD`, linked), front-matter `spec_version`/`version` and `status`, ISO 8601 render time, and the commit that last changed the file. |
 | `check` | `'warn'` | `'error'` fails the build on a reference to an undefined ID or a duplicate definition. |
 
 A **file** document is `{ file, slug, title?, split?, defines? }`:
@@ -163,6 +165,8 @@ writes one self-contained page: a contents rail beside one reading column, light
 reader's setting, with a toggle), all CSS inline. The only external request is Google Fonts for the default
 faces; `--no-google-fonts` removes it. Identifiers are anchored and linked exactly as on the site;
 `--with <file>=<url>` lets mentions of another document's IDs link to where that document is published.
+The header carries the same basis block as a site page (front-matter `date` is the author's and is not
+shown as the render time).
 
 | Flag | |
 | --- | --- |

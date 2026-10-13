@@ -20,7 +20,8 @@ import { createIdMatcher, walk } from '../core/ids.js';
 import { DEFAULT_RULES, definesFilter, type CheckMode, type IdOptions } from '../core/options.js';
 import { parseDocument, type DocInfo, type PageSpec } from '../core/source.js';
 import { processPages, report, type Problem, type RenderedPage } from '../core/engine.js';
-import { detectRepoUrl, lastCommit, repoPrefix, repoTop } from '../core/git.js';
+import { detectRepoUrl, repoPrefix, repoTop } from '../core/git.js';
+import { basisBlock, basisRows, buildInfo } from '../core/basis.js';
 import { pageTemplate } from './template.js';
 
 export interface SnapshotOptions {
@@ -48,6 +49,8 @@ export interface SnapshotOptions {
 	/** Heading depth of the contents rail: 2 (default) or 3. */
 	tocDepth?: 2 | 3;
 	warn?: (message: string) => void;
+	/** The render time shown in the basis block. Default: now. */
+	renderedAt?: Date;
 }
 
 export interface SnapshotResult {
@@ -140,11 +143,12 @@ export async function renderSnapshot(o: SnapshotOptions): Promise<SnapshotResult
 
 	const urlOf = new Map<DocInfo, string>(others.map((x) => [x.doc, x.url]));
 	const repoUrl = o.repoUrl === false ? undefined : (o.repoUrl ?? detectRepoUrl(root));
+	const repo = { url: repoUrl?.replace(/\/$/, ''), branch: o.branch ?? 'main', prefix: repoPrefix(root) };
 	const result = processPages(pages, {
 		ids,
 		rules: o.ids?.definitions && o.ids.definitions !== 'auto' ? o.ids.definitions : DEFAULT_RULES,
 		linkText: o.ids?.linkText ?? true,
-		repo: { url: repoUrl, branch: o.branch ?? 'main', prefix: repoPrefix(root) },
+		repo,
 		pageUrl: (p: PageSpec) => urlOf.get(p.doc) ?? '',
 		readOnly: (p: PageSpec) => p.doc !== main,
 	});
@@ -152,25 +156,15 @@ export async function renderSnapshot(o: SnapshotOptions): Promise<SnapshotResult
 
 	const tree = pages[0]!.tree;
 	wrapTables(tree);
-	const commit = lastCommit(abs);
 	const fm = main.frontmatter;
-	const meta: [string, string][] = [];
-	for (const [k, v] of Object.entries(fm)) {
-		if (typeof v !== 'string' && typeof v !== 'number' && !(v instanceof Date)) continue;
-		const label = /(^|_)version$/.test(k) ? 'Version' : k === 'status' ? 'Status' : k === 'date' ? 'Date' : undefined;
-		if (!label) continue;
-		const s = v instanceof Date ? v.toISOString().slice(0, 10) : String(v);
-		meta.push([label, s.split(/; | \(/)[0]!]);
-	}
-	let source = basename(abs);
-	if (commit) source += ` · ${commit.short}${commit.date ? ' ' + commit.date.toISOString().slice(0, 10) : ''}${commit.dirty ? ' + local changes' : ''}`;
-	meta.push(['Source', source]);
+	const build = buildInfo(root, repo, o.renderedAt);
+	const basis = toHtml(basisBlock(basisRows(main, build), ['meta', 'specsite-basis']));
 
 	const html = pageTemplate({
 		title: main.title,
 		kicker: basename(abs),
 		summary: o.summary ?? (typeof fm.summary === 'string' ? fm.summary : typeof fm.description === 'string' ? fm.description : undefined),
-		meta,
+		basis,
 		toc: toc(tree, o.tocDepth ?? 2),
 		body: toHtml(tree),
 		brand: o.brand,

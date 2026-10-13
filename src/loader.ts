@@ -9,12 +9,13 @@
 
 import { fromHtml } from 'hast-util-from-html';
 import { toHtml } from 'hast-util-to-html';
-import type { Element, Root } from 'hast';
+import type { Root } from 'hast';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { relative, resolve, sep } from 'node:path';
 import { processPages, report, type RenderedPage } from './core/engine.js';
 import { loadDocuments, type ResolvedOptions } from './core/project.js';
 import { lastCommit, type CommitInfo } from './core/git.js';
+import { basisBlock, basisRows, buildInfo } from './core/basis.js';
 import { repoFileUrl } from './core/links.js';
 import type { DocInfo, PageSpec } from './core/source.js';
 import { getShared } from './state.js';
@@ -66,23 +67,6 @@ export function sitePageUrl(config: LoaderContextLike['config'], id: string): st
 	return base + id + (config.trailingSlash === 'never' ? '' : '/');
 }
 
-function sourceLine(doc: DocInfo, commit: CommitInfo | undefined, r: ResolvedOptions): Element {
-	const name = doc.file;
-	const fileHref = commit && r.repo.url ? repoFileUrl({ ...r.repo, branch: commit.hash }, doc.file) : repoFileUrl(r.repo, doc.file);
-	const children: Element['children'] = [{ type: 'text', value: 'Source: ' }];
-	children.push(
-		fileHref
-			? { type: 'element', tagName: 'a', properties: { href: fileHref }, children: [{ type: 'text', value: name }] }
-			: { type: 'element', tagName: 'span', properties: {}, children: [{ type: 'text', value: name }] },
-	);
-	if (commit) {
-		children.push({ type: 'text', value: ' @ ' });
-		children.push({ type: 'element', tagName: 'code', properties: {}, children: [{ type: 'text', value: commit.short }] });
-		if (commit.dirty) children.push({ type: 'text', value: ' + local changes' });
-	}
-	return { type: 'element', tagName: 'p', properties: { className: ['specsite-source'] }, children };
-}
-
 async function loadSpecs(ctx: LoaderContextLike, r: ResolvedOptions): Promise<string[]> {
 	const started = performance.now();
 	const docsDir = fileURLToPath(new URL('content/docs/', ctx.config.srcDir));
@@ -122,11 +106,12 @@ async function loadSpecs(ctx: LoaderContextLike, r: ResolvedOptions): Promise<st
 	report(result.problems, r.check, (m) => ctx.logger.warn(m));
 
 	const commits = new Map<DocInfo, CommitInfo | undefined>(docs.map((d) => [d, lastCommit(d.absPath)]));
+	const build = buildInfo(r.root, r.repo);
 	const written: string[] = [];
 	for (const page of rendered) {
 		const { spec } = page;
 		const commit = commits.get(spec.doc);
-		if (r.sourceLine) page.tree.children.unshift(sourceLine(spec.doc, commit, r));
+		if (r.sourceLine) page.tree.children.unshift(basisBlock(basisRows(spec.doc, build, commit), ['specsite-source', 'specsite-basis']));
 		const html = toHtml(page.tree);
 		const editUrl = r.repo.url ? `${r.repo.url}/edit/${encodeURIComponent(r.repo.branch)}/${r.repo.prefix}${spec.doc.file}` : false;
 		const data = await ctx.parseData({

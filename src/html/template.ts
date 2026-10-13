@@ -9,7 +9,8 @@ export interface TemplateInput {
 	title: string;
 	kicker: string;
 	summary?: string;
-	meta: [string, string][];
+	/** The basis block, already rendered (a `<dl class="meta">`). */
+	basis: string;
 	toc: string;
 	body: string;
 	brand?: string;
@@ -50,7 +51,6 @@ export function pageTemplate(t: TemplateInput): string {
 	const brand = t.brand
 		? brandSvg(t.brand, t.brandDark ? 'brand-light' : '', label) + (t.brandDark ? '\n' + brandSvg(t.brandDark, 'brand-dark', label) : '')
 		: '';
-	const meta = t.meta.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
 	const fonts = t.googleFonts
 		? `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,6 +102,8 @@ header.doc h1{font-size:44px;margin:10px 0 8px}
 .summary{font-size:18px;color:var(--muted);margin:0 0 14px}
 dl.meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin:0;font:13px/1.5 var(--f-mono)}
 dl.meta div{display:flex;gap:6px;min-width:0}dl.meta dt{color:var(--muted)}dl.meta dd{margin:0;overflow-wrap:anywhere}
+dl.meta a{color:inherit}dl.meta code{background:none;padding:0;font-size:inherit}
+dl.meta [data-specsite-basis=source]{flex-basis:100%;color:var(--muted)}
 main h1{font-size:34px;margin:40px 0 12px}
 main h2{font-size:30px;margin:44px 0 12px;padding-top:14px;border-top:1px solid var(--rule)}
 main h3{font-size:23px;margin:30px 0 8px}main h4{font-size:19px;margin:22px 0 6px}
@@ -139,7 +141,7 @@ img{max-width:100%}
       <div class="kicker">{ ${esc(t.kicker)} }</div>
       <h1>${esc(t.title)}</h1>
       ${t.summary ? `<p class="summary">${esc(t.summary)}</p>` : ''}
-      <dl class="meta">${meta}</dl>
+      ${t.basis}
     </header>
     ${t.body}
   </main>
