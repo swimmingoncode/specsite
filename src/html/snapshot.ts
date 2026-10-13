@@ -12,6 +12,7 @@ import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import GithubSlugger from 'github-slugger';
 import { toHtml } from 'hast-util-to-html';
 import { toString as hastToString } from 'hast-util-to-string';
@@ -22,6 +23,7 @@ import { parseDocument, type DocInfo, type PageSpec } from '../core/source.js';
 import { processPages, report, type Problem, type RenderedPage } from '../core/engine.js';
 import { detectRepoUrl, repoPrefix, repoTop } from '../core/git.js';
 import { basisBlock, basisRows, buildInfo } from '../core/basis.js';
+import { snapshotSchema } from '../core/sanitize.js';
 import { pageTemplate } from './template.js';
 
 export interface SnapshotOptions {
@@ -49,6 +51,11 @@ export interface SnapshotOptions {
 	/** Heading depth of the contents rail: 2 (default) or 3. */
 	tocDepth?: 2 | 3;
 	warn?: (message: string) => void;
+	/**
+	 * Sanitise the document's HTML (no scripts, event handlers, `style` or `javascript:` URLs). Turn it on for
+	 * documents you did not write. Default `false` (see SECURITY.md).
+	 */
+	sanitize?: boolean;
 	/** The render time shown in the basis block. Default: now. */
 	renderedAt?: Date;
 }
@@ -60,8 +67,9 @@ export interface SnapshotResult {
 	links: number;
 }
 
-async function renderTree(markdown: string): Promise<Root> {
+async function renderTree(markdown: string, sanitize: boolean): Promise<Root> {
 	const processor = unified().use(remarkParse).use(remarkGfm).use(remarkRehype, { allowDangerousHtml: true }).use(rehypeRaw);
+	if (sanitize) processor.use(rehypeSanitize, snapshotSchema);
 	const tree = (await processor.run(processor.parse(markdown))) as Root;
 	const slugger = new GithubSlugger();
 	walk(tree, (n) => {
@@ -138,8 +146,9 @@ export async function renderSnapshot(o: SnapshotOptions): Promise<SnapshotResult
 	const others = (o.with ?? []).map((w, i) => ({ doc: parse(w.file, `with-${i}`), url: w.url }));
 
 	const pages: RenderedPage[] = [];
-	for (const spec of main.pages) pages.push({ spec, tree: await renderTree(spec.markdown) });
-	for (const { doc } of others) for (const spec of doc.pages) pages.push({ spec, tree: await renderTree(spec.markdown) });
+	const clean = o.sanitize ?? false;
+	for (const spec of main.pages) pages.push({ spec, tree: await renderTree(spec.markdown, clean) });
+	for (const { doc } of others) for (const spec of doc.pages) pages.push({ spec, tree: await renderTree(spec.markdown, clean) });
 
 	const urlOf = new Map<DocInfo, string>(others.map((x) => [x.doc, x.url]));
 	const repoUrl = o.repoUrl === false ? undefined : (o.repoUrl ?? detectRepoUrl(root));

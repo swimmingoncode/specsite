@@ -30,6 +30,7 @@ Options:
                             (default: warn)
       --toc-depth <2|3>     Headings in the contents rail (default: 2)
       --no-google-fonts     Use system fonts; the page then makes no external request
+      --sanitize            Sanitise the document's HTML (for documents you did not write)
   -h, --help                Show this help
 `;
 
@@ -62,6 +63,7 @@ export async function main(argv: string[]): Promise<number> {
 			check: { type: 'string' },
 			'toc-depth': { type: 'string' },
 			'no-google-fonts': { type: 'boolean' },
+			sanitize: { type: 'boolean' },
 			help: { type: 'boolean', short: 'h' },
 		},
 	});
@@ -105,6 +107,7 @@ export async function main(argv: string[]): Promise<number> {
 			check,
 			tocDepth: values['toc-depth'] === '3' ? 3 : 2,
 			googleFonts: !values['no-google-fonts'],
+			sanitize: values.sanitize ?? false,
 			warn: (m) => process.stderr.write(`specsite: warning: ${m}\n`),
 		});
 		mkdirSync(dirname(values.out), { recursive: true });

@@ -28,6 +28,7 @@ export interface ResolvedOptions {
 	mermaid: boolean;
 	sourceLine: boolean;
 	sidebar: SidebarOptions | false;
+	sanitize: boolean;
 }
 
 export function resolveOptions(options: SpecsiteOptions, projectRoot: string): ResolvedOptions {
@@ -55,6 +56,7 @@ export function resolveOptions(options: SpecsiteOptions, projectRoot: string): R
 		mermaid: options.mermaid ?? true,
 		sourceLine: options.sourceLine ?? true,
 		sidebar: options.sidebar ?? {},
+		sanitize: options.sanitize ?? false,
 	};
 }
 

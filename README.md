@@ -107,6 +107,7 @@ unchanged, and nothing is written to disk.
 | `mermaid` | `true` | Render ` ```mermaid ` fences in the browser, from the site's own bundle, only on pages that have one. |
 | `sourceLine` | `true` | Show the basis block at the top of each page: repository (`owner/name`), build commit (`HEAD`, linked), front-matter `spec_version`/`version` and `status`, ISO 8601 render time, and the commit that last changed the file. |
 | `check` | `'warn'` | `'error'` fails the build on a reference to an undefined ID, a duplicate definition, or a link to a missing anchor in a listed document. |
+| `sanitize` | `false` | Sanitise each page's HTML (rehype-sanitize allowlist). Off, raw HTML is published as written; turn it on for documents you did not write. See [SECURITY.md](SECURITY.md). |
 
 A **file** document is `{ file, slug, title?, split?, defines? }`:
 
@@ -184,6 +185,7 @@ shown as the render time).
 | `--prefixes <list>` | Comma-separated ID prefixes. |
 | `--check <warn\|error>` | As `check` above; `error` exits non-zero. |
 | `--toc-depth <2\|3>` | Headings in the contents rail. |
+| `--sanitize` | As `sanitize` above. |
 
 The default theme is Swimming on Code's; a project with its own identity passes `--brand` and `--accent`.
 

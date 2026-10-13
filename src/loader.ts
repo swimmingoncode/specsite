@@ -18,6 +18,7 @@ import { lastCommit, type CommitInfo } from './core/git.js';
 import { basisBlock, basisRows, buildInfo } from './core/basis.js';
 import { repoFileUrl } from './core/links.js';
 import type { DocInfo, PageSpec } from './core/source.js';
+import { codeBlockCount, sanitizeRendered } from './core/sanitize.js';
 import { getShared } from './state.js';
 
 // Structural types for the pieces of Astro's loader API used here, so this module has no runtime
@@ -88,6 +89,7 @@ async function loadSpecs(ctx: LoaderContextLike, r: ResolvedOptions): Promise<st
 		const filePath = `${docsDirRel}/${spec.id}${spec.order === 0 && spec.doc.pages.length > 1 ? '/index' : ''}.md`;
 		const out = await ctx.renderMarkdown(spec.markdown, { fileURL: pathToFileURL(resolve(fileURLToPath(ctx.config.root), filePath)) });
 		const tree = fromHtml(out.html, { fragment: true }) as Root;
+		if (r.sanitize) sanitizeRendered(tree, codeBlockCount(spec.markdown));
 		rendered.push({
 			spec,
 			tree,

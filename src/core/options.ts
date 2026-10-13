@@ -92,6 +92,12 @@ export interface SpecsiteOptions {
 	 * fragment that is not an anchor in a listed document. Default `'warn'`.
 	 */
 	check?: CheckMode;
+	/**
+	 * Sanitise each page's HTML (rehype-sanitize allowlist: GitHub's, plus ids, `data-*` and specsite's classes;
+	 * no scripts, event handlers, `style` or `javascript:` URLs). Turn it on for documents you did not write,
+	 * such as contributed docs. Default `false`: raw HTML is published as written (see SECURITY.md).
+	 */
+	sanitize?: boolean;
 }
 
 export function isGlobDocument(d: DocumentConfig): d is GlobDocument {
