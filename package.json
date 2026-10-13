@@ -46,8 +46,7 @@
     "bin",
     "client",
     "styles",
-    "LICENSE-APACHE",
-    "LICENSE-MIT",
+    "LICENSE",
     "README.md"
   ],
   "workspaces": [
