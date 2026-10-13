@@ -131,3 +131,19 @@ describe('definition detection', () => {
 		expect(toHtml(pages[0]!.tree)).toContain('<pre><code>REQ-1 `REQ-1`\n</code></pre>');
 	});
 });
+
+describe('duplicates', () => {
+	it('treats a list item that opens with an ID defined in bold elsewhere as a reference', async () => {
+		const d = doc('SPEC.md', '# Spec\n\n- `REQ-1` (in a traceability list)\n\n**`REQ-1`** The definition.\n');
+		const pages = await render(d);
+		const res = processPages(pages, { ids, repo, pageUrl });
+		expect(res.problems).toEqual([]);
+		expect(toHtml(pages[0]!.tree)).toContain('<li><a href="#req-1"');
+	});
+	it('reports two bold definitions on the same page with their lines', async () => {
+		const d = doc('SPEC.md', '# Spec\n\n**`REQ-1`** One.\n\nText `REQ-1`.\n\n**`REQ-1`** Two.\n');
+		const pages = await render(d);
+		const res = processPages(pages, { ids, repo, pageUrl });
+		expect(res.problems.map((p) => p.at)).toEqual([['SPEC.md:3', 'SPEC.md:7']]);
+	});
+});

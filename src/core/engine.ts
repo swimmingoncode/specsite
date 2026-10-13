@@ -28,6 +28,8 @@ export interface Definition {
 	/** `''` for an ID defined by the page's title heading. */
 	anchor: string;
 	rule: DefinitionRule | 'title';
+	/** The element that holds it (identity only). */
+	el?: unknown;
 }
 
 export interface Problem {
@@ -68,6 +70,28 @@ function locate(page: PageSpec, id: string, first = false): string[] {
 	const lines = linesOf(page, id);
 	if (!lines.length) return [page.doc.file];
 	return (first ? lines.slice(0, 1) : lines).map((l) => `${page.doc.file}:${l}`);
+}
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** The line of a definition: the first line in the page where the ID appears in the shape its rule matched. */
+function locateDefinition(def: Definition, nth = 0): string {
+	const { page, id, rule } = def;
+	const lines = page.doc.text.split('\n');
+	const from = lineAt(page.doc.text, page.range[0]) - 1;
+	const to = lineAt(page.doc.text, page.range[1]);
+	const code = '`' + escapeRe(id) + '`';
+	const shape: Record<string, RegExp> = {
+		bold: new RegExp(`\\*\\*${code}\\*\\*`),
+		table: new RegExp(`^\\s*\\|\\s*(?:\\*\\*)?${code}`),
+		heading: new RegExp(`^\\s{0,3}#{1,6}\\s.*${escapeRe(id)}`),
+		title: new RegExp(`^\\s{0,3}#{1,6}\\s.*${escapeRe(id)}`),
+		list: new RegExp(`^\\s*(?:[-*+]|\\d+[.)])\\s+(?:\\[.\\]\\s+)?${code}`),
+	};
+	for (let i = from; i < to && i < lines.length; i++) {
+		if (shape[rule]!.test(lines[i]!) && nth-- === 0) return `${page.doc.file}:${i + 1}`;
+	}
+	return locate(page, id, true)[0]!;
 }
 
 /** Step 1: rename rendered heading ids to the document-wide anchors computed from the source. */
@@ -121,7 +145,10 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 			index.set(def.id, def);
 			return true;
 		}
-		if (prev.page !== def.page || prev.anchor !== def.anchor) {
+		// Only the same kind of definition twice is a conflict: a list item or table row that opens with an ID
+		// defined more strongly elsewhere (a traceability list, a summary table) is a reference.
+		const sameKind = prev.rule === def.rule || (prev.rule === 'title' && def.rule === 'heading');
+		if (sameKind && (prev.page !== def.page || prev.el !== def.el)) {
 			const list = duplicates.get(def.id) ?? [prev];
 			list.push(def);
 			duplicates.set(def.id, list);
@@ -152,7 +179,7 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 		for (const p of pages) {
 			for (const c of findCandidates(p.tree, rule, opts.ids)) {
 				if (!p.spec.doc.defines(c.id)) continue;
-				if (define({ id: c.id, page: p.spec, anchor: anchorOf(c.id), rule })) markDefinition(c, taken.get(p)!);
+				if (define({ id: c.id, page: p.spec, anchor: anchorOf(c.id), rule, el: c.code ?? c.heading })) markDefinition(c, taken.get(p)!);
 			}
 		}
 	}
@@ -160,7 +187,7 @@ export function processPages(pages: RenderedPage[], opts: EngineOptions): Engine
 		problems.push({
 			kind: 'duplicate-definition',
 			message: `${id} is defined ${defs.length} times; the first wins`,
-			at: defs.flatMap((d) => locate(d.page, id, true)),
+			at: defs.map((d, i) => locateDefinition(d, defs.slice(0, i).filter((e) => e.page === d.page && e.rule === d.rule).length)),
 		});
 	}
 
